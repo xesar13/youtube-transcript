@@ -1,0 +1,49 @@
+{
+  "name": "youtube-transcript",
+  "version": "1.0.0",
+  "description": "API de Node.js para extraer transcripciones de videos de YouTube usando yt-dlp",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "node test-api.js",
+    "test:health": "curl http://localhost:3003/health",
+    "clean": "rm -rf temp/* && echo 'Archivos temporales eliminados'",
+    "check": "echo 'Verificando dependencias...' && yt-dlp --version && node --version",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:start:dev": "pm2 start ecosystem.config.js --env development",
+    "pm2:start:staging": "pm2 start ecosystem.config.js --env staging",
+    "pm2:stop": "pm2 stop youtube-transcript-api",
+    "pm2:restart": "pm2 restart youtube-transcript-api",
+    "pm2:reload": "pm2 reload youtube-transcript-api",
+    "pm2:delete": "pm2 delete youtube-transcript-api",
+    "pm2:logs": "pm2 logs youtube-transcript-api",
+    "pm2:monit": "pm2 monit",
+    "pm2:status": "pm2 status",
+    "pm2:save": "pm2 save",
+    "pm2:resurrect": "pm2 resurrect"
+  },
+  "keywords": [
+    "youtube",
+    "transcript",
+    "subtitles",
+    "yt-dlp",
+    "api",
+    "nodejs",
+    "express"
+  ],
+  "author": "César Mendívil",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "express": "^4.19.2",
+    "fs-extra": "^11.3.0",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "axios": "^1.10.0",
+    "nodemon": "^3.1.10",
+    "pm2": "^6.0.8"
+  }
+}

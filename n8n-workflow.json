@@ -1,0 +1,67 @@
+{
+  "name": "YouTube Transcript Extractor",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/transcript/clean",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.videoUrl }}"
+            },
+            {
+              "name": "lang",
+              "value": "es"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "YouTube Transcript API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        820,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract and process the transcript\nconst data = $input.first().json;\n\nif (!data.success || !data.cleanedTranscript) {\n  return {\n    json: {\n      success: false,\n      message: data.message || 'No transcript available for this video',\n      videoUrl: data.videoUrl || 'Unknown'\n    }\n  };\n}\n\n// El texto ya viene limpio de la API\nconst finalTranscript = data.cleanedTranscript\n  .replace(/\\s+/g, ' ')\n  .replace(/\\s([.,!?])/g, '$1')\n  .trim();\n\nreturn {\n  json: {\n    success: true,\n    videoUrl: data.videoUrl,\n    videoId: data.videoId,\n    cleanedTranscript: finalTranscript,\n    wordCount: data.wordCount,\n    characterCount: data.characterCount,\n    language: data.language,\n    processedAt: new Date().toISOString()\n  }\n};"
+      },
+      "name": "Process Transcript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "YouTube Transcript API": {
+      "main": [
+        [
+          {
+            "node": "Process Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {}
+}
