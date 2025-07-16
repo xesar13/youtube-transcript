@@ -39,7 +39,10 @@
     "express": "^4.19.2",
     "fs-extra": "^11.3.0",
     "helmet": "^8.1.0",
-    "morgan": "^1.10.0"
+    "js-yaml": "^4.1.0",
+    "morgan": "^1.10.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "axios": "^1.10.0",

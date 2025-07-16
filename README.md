@@ -7,6 +7,7 @@ Una API de Node.js para extraer transcripciones de videos de YouTube utilizando 
 - ✅ Extracción de transcripciones automáticas de YouTube
 - ✅ Soporte para múltiples idiomas
 - ✅ API REST con endpoints claros
+- ✅ **📚 Documentación interactiva con Swagger UI**
 - ✅ **Gestión avanzada con PM2** (clustering, auto-restart, logs)
 - ✅ **Graceful shutdown** para deploys sin downtime
 - ✅ Descarga de archivos de subtítulos en diferentes formatos
@@ -41,6 +42,11 @@ Una API de Node.js para extraer transcripciones de videos de YouTube utilizando 
 ```bash
 npm run dev
 ```
+
+El servidor estará disponible en:
+- **🌐 API**: http://localhost:3003
+- **📚 Documentación Swagger**: http://localhost:3003/api-docs
+- **🔍 Health Check**: http://localhost:3003/health
 
 ### Producción con PM2 (Recomendado)
 ```bash
@@ -79,14 +85,31 @@ npm start
 
 El servidor se ejecutará en `http://localhost:3003`
 
-## 📚 API Endpoints
+## 📚 Documentación de API
 
-### Health Check
+### Swagger UI Interactiva
+La API incluye documentación completa e interactiva con **Swagger UI**:
+
+- **📖 Documentación completa**: http://localhost:3003/api-docs
+- **🔗 Acceso directo**: http://localhost:3003/docs
+- **📄 Especificación JSON**: http://localhost:3003/api-docs.json
+- **📄 Especificación YAML**: http://localhost:3003/api-docs.yaml
+
+La documentación incluye:
+- ✅ Descripción detallada de todos los endpoints
+- ✅ Esquemas de request/response
+- ✅ Ejemplos de uso
+- ✅ Códigos de error y manejo
+- ✅ **Interfaz "Try it out"** para probar directamente
+
+### Endpoints principales
+
+#### Health Check
 ```http
 GET /health
 ```
 
-### Extraer transcripción
+#### Extraer transcripción
 ```http
 POST /api/transcript/extract
 Content-Type: application/json

@@ -7,6 +7,7 @@ const path = require('path');
 require('dotenv').config();
 
 const transcriptRoutes = require('./routes/transcript');
+const { setupSwagger } = require('./swagger');
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -31,6 +32,9 @@ if (process.env.NODE_ENV === 'production') {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Setup Swagger documentation
+setupSwagger(app);
 
 // Routes
 app.use('/api/transcript', transcriptRoutes);
@@ -65,6 +69,7 @@ const server = app.listen(PORT, () => {
   console.log(`🚀 Servidor ejecutándose en http://localhost:${PORT}`);
   console.log(`📋 Health check en http://localhost:${PORT}/health`);
   console.log(`📝 API de transcripciones en http://localhost:${PORT}/api/transcript`);
+  console.log(`📚 Documentación Swagger en http://localhost:${PORT}/api-docs`);
   console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔧 Proceso ID: ${process.pid}`);
 });

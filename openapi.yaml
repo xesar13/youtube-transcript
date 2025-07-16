@@ -1,0 +1,612 @@
+openapi: 3.0.3
+info:
+  title: YouTube Transcript API
+  description: |
+    Una API REST para extraer transcripciones de videos de YouTube utilizando yt-dlp.
+    
+    ## Características
+    - ✅ Extracción de transcripciones automáticas de YouTube
+    - ✅ Soporte para múltiples idiomas
+    - ✅ Descarga de archivos de subtítulos en diferentes formatos
+    - ✅ Validación de URLs de YouTube
+    - ✅ Limpieza automática de archivos temporales
+    - ✅ Integración optimizada con n8n
+    
+    ## Requisitos
+    - Node.js (versión 14 o superior)
+    - yt-dlp instalado globalmente: `pip install yt-dlp`
+    
+    ## Enlaces útiles
+    - [Repositorio GitHub](https://github.com/xesar13/youtube-transcript)
+    - [Documentación completa](README.md)
+    - [Guía de integración n8n](n8n-integration.md)
+    
+  version: 1.0.0
+  contact:
+    name: César Mendívil
+    email: cesar@nextream.com
+  license:
+    name: ISC
+    url: https://opensource.org/licenses/ISC
+
+servers:
+  - url: http://localhost:3003
+    description: Servidor de desarrollo
+  - url: https://api.example.com
+    description: Servidor de producción
+
+tags:
+  - name: Health
+    description: Estado y salud de la API
+  - name: Transcript
+    description: Operaciones de extracción de transcripciones
+  - name: Video Info
+    description: Información de videos de YouTube
+  - name: Languages
+    description: Gestión de idiomas disponibles
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check del servidor
+      description: Verifica que la API esté funcionando correctamente
+      operationId: healthCheck
+      responses:
+        '200':
+          description: API funcionando correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "OK"
+                message: "YouTube Transcript API está funcionando"
+                timestamp: "2025-07-16T10:30:00.000Z"
+
+  /api/transcript/extract:
+    post:
+      tags:
+        - Transcript
+      summary: Extraer transcripción con timestamps
+      description: |
+        Extrae la transcripción completa de un video de YouTube con timestamps.
+        Devuelve un array de segmentos con tiempo de inicio, fin y texto.
+      operationId: extractTranscript
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranscriptRequest'
+            example:
+              url: "https://www.youtube.com/watch?v=8cnF9pESLPc"
+              lang: "es"
+      responses:
+        '200':
+          description: Transcripción extraída exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptResponse'
+        '400':
+          description: URL inválida o parámetros incorrectos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Video no encontrado o sin subtítulos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/transcript/clean:
+    post:
+      tags:
+        - Transcript
+      summary: Extraer transcripción limpia (Compatible con n8n)
+      description: |
+        Extrae la transcripción de un video de YouTube y la devuelve como texto limpio,
+        optimizado para uso en workflows de n8n. Incluye estadísticas y procesamiento
+        automático del texto.
+      operationId: extractCleanTranscript
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranscriptRequest'
+            example:
+              url: "https://www.youtube.com/watch?v=8cnF9pESLPc"
+              lang: "es"
+      responses:
+        '200':
+          description: Transcripción limpia extraída exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CleanTranscriptResponse'
+        '400':
+          description: URL inválida o parámetros incorrectos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Video no encontrado o sin subtítulos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/transcript/download:
+    post:
+      tags:
+        - Transcript
+      summary: Descargar archivos de subtítulos
+      description: |
+        Descarga archivos de subtítulos sin procesarlos. Útil para obtener
+        los archivos originales en diferentes formatos.
+      operationId: downloadSubtitles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DownloadRequest'
+            example:
+              url: "https://www.youtube.com/watch?v=8cnF9pESLPc"
+              lang: "es"
+              format: "vtt"
+      responses:
+        '200':
+          description: Archivo descargado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadResponse'
+        '400':
+          description: URL inválida o parámetros incorrectos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Video no encontrado o sin subtítulos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/transcript/info/{videoId}:
+    get:
+      tags:
+        - Video Info
+      summary: Obtener información del video
+      description: |
+        Obtiene metadatos básicos de un video de YouTube como título,
+        duración, canal y fecha de subida.
+      operationId: getVideoInfo
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          description: ID del video de YouTube (11 caracteres)
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9_-]{11}$'
+          example: "8cnF9pESLPc"
+      responses:
+        '200':
+          description: Información del video obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoInfoResponse'
+        '400':
+          description: ID de video inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Video no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/transcript/languages/{videoId}:
+    get:
+      tags:
+        - Languages
+      summary: Obtener idiomas disponibles
+      description: |
+        Lista todos los idiomas disponibles para los subtítulos de un video específico.
+        Útil para saber qué idiomas están disponibles antes de hacer la extracción.
+      operationId: getAvailableLanguages
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          description: ID del video de YouTube (11 caracteres)
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9_-]{11}$'
+          example: "8cnF9pESLPc"
+      responses:
+        '200':
+          description: Lista de idiomas obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LanguagesResponse'
+        '400':
+          description: ID de video inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Video no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [OK, ERROR]
+          description: Estado del servidor
+        message:
+          type: string
+          description: Mensaje descriptivo del estado
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp de la respuesta
+      required:
+        - status
+        - message
+        - timestamp
+
+    TranscriptRequest:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          pattern: '^https?://(www\.)?(youtube\.com/watch\?v=|youtu\.be/)[a-zA-Z0-9_-]{11}'
+          description: URL completa del video de YouTube
+          example: "https://www.youtube.com/watch?v=8cnF9pESLPc"
+        lang:
+          type: string
+          pattern: '^[a-z]{2}(-[A-Z]{2})?$'
+          default: "es"
+          description: Código de idioma ISO 639-1
+          example: "es"
+      required:
+        - url
+
+    DownloadRequest:
+      allOf:
+        - $ref: '#/components/schemas/TranscriptRequest'
+        - type: object
+          properties:
+            format:
+              type: string
+              enum: [vtt, srt, ttml]
+              default: "vtt"
+              description: Formato del archivo de subtítulos
+              example: "vtt"
+
+    TranscriptSegment:
+      type: object
+      properties:
+        startTime:
+          type: string
+          description: Tiempo de inicio del segmento (formato HH:MM:SS.mmm)
+          example: "00:00:15.120"
+        endTime:
+          type: string
+          description: Tiempo de fin del segmento (formato HH:MM:SS.mmm)
+          example: "00:00:18.380"
+        text:
+          type: string
+          description: Texto del segmento de transcripción
+          example: "Hola, bienvenidos a este video"
+      required:
+        - startTime
+        - endTime
+        - text
+
+    TranscriptResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indica si la operación fue exitosa
+          example: true
+        url:
+          type: string
+          format: uri
+          description: URL del video procesado
+          example: "https://www.youtube.com/watch?v=8cnF9pESLPc"
+        language:
+          type: string
+          description: Idioma de la transcripción extraída
+          example: "es"
+        transcript:
+          type: array
+          items:
+            $ref: '#/components/schemas/TranscriptSegment'
+          description: Array de segmentos de transcripción con timestamps
+      required:
+        - success
+        - url
+        - language
+        - transcript
+
+    CleanTranscriptResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indica si la operación fue exitosa
+          example: true
+        videoUrl:
+          type: string
+          format: uri
+          description: URL del video procesado
+          example: "https://www.youtube.com/watch?v=8cnF9pESLPc"
+        videoId:
+          type: string
+          description: ID extraído del video
+          example: "8cnF9pESLPc"
+        language:
+          type: string
+          description: Idioma de la transcripción
+          example: "es"
+        cleanedTranscript:
+          type: string
+          description: Texto completo de la transcripción limpio y procesado
+          example: "Hola, bienvenidos a este video donde vamos a hablar sobre inteligencia artificial..."
+        wordCount:
+          type: integer
+          description: Número total de palabras en la transcripción
+          example: 1250
+        characterCount:
+          type: integer
+          description: Número total de caracteres en la transcripción
+          example: 7845
+        totalSegments:
+          type: integer
+          description: Número total de segmentos de tiempo en la transcripción original
+          example: 145
+      required:
+        - success
+        - videoUrl
+        - videoId
+        - language
+        - cleanedTranscript
+        - wordCount
+        - characterCount
+        - totalSegments
+
+    DownloadResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indica si la descarga fue exitosa
+          example: true
+        url:
+          type: string
+          format: uri
+          description: URL del video procesado
+          example: "https://www.youtube.com/watch?v=8cnF9pESLPc"
+        language:
+          type: string
+          description: Idioma del archivo descargado
+          example: "es"
+        format:
+          type: string
+          description: Formato del archivo descargado
+          example: "vtt"
+        videoId:
+          type: string
+          description: ID del video
+          example: "8cnF9pESLPc"
+        fileName:
+          type: string
+          description: Nombre del archivo generado
+          example: "8cnF9pESLPc.es.vtt"
+        filePath:
+          type: string
+          description: Ruta del archivo en el servidor
+          example: "/temp/8cnF9pESLPc.es.vtt"
+        fileSize:
+          type: integer
+          description: Tamaño del archivo en bytes
+          example: 15420
+        downloadedAt:
+          type: string
+          format: date-time
+          description: Timestamp de la descarga
+          example: "2025-07-16T10:30:00.000Z"
+      required:
+        - success
+        - url
+        - language
+        - format
+        - videoId
+        - fileName
+        - filePath
+        - fileSize
+        - downloadedAt
+
+    VideoInfoResponse:
+      type: object
+      properties:
+        videoId:
+          type: string
+          description: ID del video de YouTube
+          example: "8cnF9pESLPc"
+        title:
+          type: string
+          description: Título del video
+          example: "Introducción a la Inteligencia Artificial"
+        duration:
+          type: string
+          description: Duración del video
+          example: "1234"
+        uploader:
+          type: string
+          description: Nombre del canal que subió el video
+          example: "Canal Educativo"
+        uploadDate:
+          type: string
+          description: Fecha de subida del video
+          example: "20240101"
+        url:
+          type: string
+          format: uri
+          description: URL completa del video
+          example: "https://www.youtube.com/watch?v=8cnF9pESLPc"
+      required:
+        - videoId
+        - title
+        - duration
+        - uploader
+        - uploadDate
+        - url
+
+    LanguagesResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Mensaje sobre la funcionalidad
+          example: "Funcionalidad en desarrollo"
+        videoId:
+          type: string
+          description: ID del video consultado
+          example: "8cnF9pESLPc"
+        availableLanguages:
+          type: array
+          items:
+            type: string
+          description: Lista de códigos de idioma disponibles
+          example: ["es", "en", "fr", "de", "it", "pt"]
+      required:
+        - message
+        - videoId
+        - availableLanguages
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Siempre false para errores
+          example: false
+        error:
+          type: string
+          description: Mensaje de error principal
+          example: "URL de YouTube no válida"
+        message:
+          type: string
+          description: Descripción detallada del error
+          example: "La URL proporcionada no es una URL válida de YouTube"
+        suggestion:
+          type: string
+          description: Sugerencia para resolver el error
+          example: "Verifica que la URL tenga el formato correcto: https://www.youtube.com/watch?v=VIDEO_ID"
+        videoUrl:
+          type: string
+          description: URL que causó el error (si aplica)
+          example: "https://invalid-url.com"
+      required:
+        - success
+        - error
+
+  examples:
+    SuccessfulTranscript:
+      summary: Transcripción exitosa
+      value:
+        success: true
+        url: "https://www.youtube.com/watch?v=8cnF9pESLPc"
+        language: "es"
+        transcript:
+          - startTime: "00:00:00.000"
+            endTime: "00:00:03.500"
+            text: "Hola, bienvenidos a este video"
+          - startTime: "00:00:03.500"
+            endTime: "00:00:07.200"
+            text: "donde vamos a hablar sobre inteligencia artificial"
+
+    CleanTranscriptExample:
+      summary: Transcripción limpia para n8n
+      value:
+        success: true
+        videoUrl: "https://www.youtube.com/watch?v=8cnF9pESLPc"
+        videoId: "8cnF9pESLPc"
+        language: "es"
+        cleanedTranscript: "Hola, bienvenidos a este video donde vamos a hablar sobre inteligencia artificial y cómo está transformando nuestra sociedad..."
+        wordCount: 1250
+        characterCount: 7845
+        totalSegments: 145
+
+    InvalidUrlError:
+      summary: Error por URL inválida
+      value:
+        success: false
+        error: "URL de YouTube no válida"
+        message: "La URL proporcionada no es una URL válida de YouTube"
+        suggestion: "Verifica que la URL tenga el formato correcto"
+
+    VideoNotFoundError:
+      summary: Video no encontrado
+      value:
+        success: false
+        error: "Video no encontrado"
+        message: "No se pudieron extraer subtítulos para este video"
+        suggestion: "Verifica que el video exista y tenga subtítulos disponibles"
