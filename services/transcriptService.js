@@ -68,6 +68,112 @@ async function getVideoInfo(videoId) {
 }
 
 /**
+ * Obtiene metadatos completos del video para incluir en las respuestas
+ * @param {string} videoId - ID del video de YouTube
+ * @returns {Promise<object>} - Metadatos completos del video
+ */
+async function getVideoMetadata(videoId) {
+  const isInstalled = await checkYtDlpInstallation();
+  if (!isInstalled) {
+    throw new Error('yt-dlp no está instalado. Por favor instálalo con: pip install yt-dlp');
+  }
+
+  const url = `https://www.youtube.com/watch?v=${videoId}`;
+  
+  try {
+    // Obtener metadatos completos en formato JSON
+    const command = `yt-dlp -j "${url}"`;
+    const { stdout } = await execAsync(command);
+    
+    const metadata = JSON.parse(stdout.trim());
+    
+    // Extraer y formatear la información relevante
+    return {
+      videoId: metadata.id || videoId,
+      title: metadata.title || 'Sin título',
+      description: metadata.description || '',
+      channel: metadata.uploader || metadata.channel || 'Desconocido',
+      channelId: metadata.uploader_id || metadata.channel_id || '',
+      channelUrl: metadata.uploader_url || metadata.channel_url || '',
+      duration: metadata.duration || 0,
+      durationFormatted: formatDuration(metadata.duration || 0),
+      uploadDate: formatDate(metadata.upload_date || ''),
+      viewCount: metadata.view_count || 0,
+      likeCount: metadata.like_count || 0,
+      commentCount: metadata.comment_count || 0,
+      tags: metadata.tags || [],
+      categories: metadata.categories || [],
+      thumbnailUrl: metadata.thumbnail || '',
+      language: metadata.language || 'es',
+      availability: metadata.availability || 'public',
+      ageLimit: metadata.age_limit || 0
+    };
+  } catch (error) {
+    console.error('Error obteniendo metadatos completos:', error);
+    // Fallback a información básica si falla la extracción completa
+    try {
+      const basicInfo = await getVideoInfo(videoId);
+      return {
+        videoId: basicInfo.videoId,
+        title: basicInfo.title,
+        description: '',
+        channel: basicInfo.uploader,
+        channelId: '',
+        channelUrl: '',
+        duration: parseInt(basicInfo.duration) || 0,
+        durationFormatted: formatDuration(parseInt(basicInfo.duration) || 0),
+        uploadDate: formatDate(basicInfo.uploadDate),
+        viewCount: 0,
+        likeCount: 0,
+        commentCount: 0,
+        tags: [],
+        categories: [],
+        thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+        language: 'es',
+        availability: 'public',
+        ageLimit: 0
+      };
+    } catch (fallbackError) {
+      throw new Error(`Error obteniendo información del video: ${error.message}`);
+    }
+  }
+}
+
+/**
+ * Formatea la duración de segundos a HH:MM:SS
+ * @param {number} seconds - Duración en segundos
+ * @returns {string} - Duración formateada
+ */
+function formatDuration(seconds) {
+  if (!seconds || seconds === 0) return '00:00';
+  
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  
+  if (hours > 0) {
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  } else {
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+}
+
+/**
+ * Formatea la fecha de YYYYMMDD a YYYY-MM-DD
+ * @param {string} dateStr - Fecha en formato YYYYMMDD
+ * @returns {string} - Fecha formateada
+ */
+function formatDate(dateStr) {
+  if (!dateStr || dateStr.length !== 8) return '';
+  
+  const year = dateStr.substring(0, 4);
+  const month = dateStr.substring(4, 6);
+  const day = dateStr.substring(6, 8);
+  
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Extrae la transcripción de un video de YouTube
  * @param {string} url - URL del video de YouTube
  * @param {string} lang - Idioma de los subtítulos (por defecto 'es')
@@ -105,19 +211,22 @@ async function extractTranscript(url, lang = 'es') {
     
     const subtitlePath = path.join(TEMP_DIR, subtitleFile);
     const subtitleContent = await fs.readFile(subtitlePath, 'utf-8');
-    
-    // Parsear el contenido VTT
+     // Parsear el contenido VTT
     const transcript = parseVTTContent(subtitleContent);
+    
+    // Obtener metadatos del video
+    const videoMetadata = await getVideoMetadata(videoId);
     
     // Limpiar archivo temporal
     await fs.remove(subtitlePath);
-    
+
     return {
       videoId,
       language: lang,
       transcript,
       totalSegments: transcript.length,
-      rawContent: subtitleContent
+      rawContent: subtitleContent,
+      source: videoMetadata
     };
     
   } catch (error) {
@@ -257,6 +366,7 @@ module.exports = {
   extractTranscript,
   downloadSubtitles,
   getVideoInfo,
+  getVideoMetadata,
   parseVTTContent,
   cleanupTempFiles,
   checkYtDlpInstallation

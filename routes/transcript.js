@@ -44,12 +44,13 @@ router.post('/extract', async (req, res) => {
       });
     }
 
-    const transcript = await extractTranscript(url, lang);
+    const result = await extractTranscript(url, lang);
     res.json({
       success: true,
       url,
       language: lang,
-      transcript
+      transcript: result.transcript,
+      source: result.source
     });
   } catch (error) {
     console.error('Error extrayendo transcripción:', error);
@@ -172,10 +173,10 @@ router.post('/clean', async (req, res) => {
       videoId: result.videoId,
       language: lang,
       cleanedTranscript,
-      rawTranscript: result.transcript,
-      totalSegments: result.totalSegments,
       wordCount: cleanedTranscript.split(' ').length,
-      characterCount: cleanedTranscript.length
+      characterCount: cleanedTranscript.length,
+      totalSegments: result.totalSegments,
+      source: result.source
     });
 
   } catch (error) {

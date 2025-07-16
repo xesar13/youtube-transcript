@@ -379,11 +379,15 @@ components:
           items:
             $ref: '#/components/schemas/TranscriptSegment'
           description: Array de segmentos de transcripción con timestamps
+        source:
+          $ref: '#/components/schemas/VideoMetadata'
+          description: Metadatos completos del video de origen
       required:
         - success
         - url
         - language
         - transcript
+        - source
 
     CleanTranscriptResponse:
       type: object
@@ -421,6 +425,9 @@ components:
           type: integer
           description: Número total de segmentos de tiempo en la transcripción original
           example: 145
+        source:
+          $ref: '#/components/schemas/VideoMetadata'
+          description: Metadatos completos del video de origen
       required:
         - success
         - videoUrl
@@ -430,6 +437,7 @@ components:
         - wordCount
         - characterCount
         - totalSegments
+        - source
 
     DownloadResponse:
       type: object
@@ -482,6 +490,95 @@ components:
         - filePath
         - fileSize
         - downloadedAt
+
+    VideoMetadata:
+      type: object
+      properties:
+        videoId:
+          type: string
+          description: ID del video de YouTube
+          example: "8cnF9pESLPc"
+        title:
+          type: string
+          description: Título del video
+          example: "¡Traición a México! Sheinbaum defiende a Cienfuegos y ataca a EE. UU. por el caso Ovidio"
+        description:
+          type: string
+          description: Descripción completa del video
+          example: "En este video analizamos las declaraciones de la presidenta Claudia Sheinbaum sobre el caso del general Salvador Cienfuegos..."
+        channel:
+          type: string
+          description: Nombre del canal que subió el video
+          example: "Canal de Noticias"
+        channelId:
+          type: string
+          description: ID del canal de YouTube
+          example: "UCexample123"
+        channelUrl:
+          type: string
+          format: uri
+          description: URL del canal
+          example: "https://www.youtube.com/channel/UCexample123"
+        duration:
+          type: integer
+          description: Duración del video en segundos
+          example: 1234
+        durationFormatted:
+          type: string
+          description: Duración formateada (HH:MM:SS)
+          example: "20:34"
+        uploadDate:
+          type: string
+          format: date
+          description: Fecha de subida del video (YYYY-MM-DD)
+          example: "2025-07-16"
+        viewCount:
+          type: integer
+          description: Número de visualizaciones
+          example: 125000
+        likeCount:
+          type: integer
+          description: Número de likes
+          example: 3500
+        commentCount:
+          type: integer
+          description: Número de comentarios
+          example: 450
+        tags:
+          type: array
+          items:
+            type: string
+          description: Hashtags y etiquetas del video
+          example: ["política", "méxico", "noticias", "sheinbaum", "cienfuegos"]
+        categories:
+          type: array
+          items:
+            type: string
+          description: Categorías del video
+          example: ["News & Politics"]
+        thumbnailUrl:
+          type: string
+          format: uri
+          description: URL de la miniatura del video
+          example: "https://i.ytimg.com/vi/8cnF9pESLPc/maxresdefault.jpg"
+        language:
+          type: string
+          description: Idioma principal del video
+          example: "es"
+        availability:
+          type: string
+          description: Disponibilidad del video
+          example: "public"
+        ageLimit:
+          type: integer
+          description: Límite de edad para el video
+          example: 0
+      required:
+        - videoId
+        - title
+        - channel
+        - duration
+        - uploadDate
 
     VideoInfoResponse:
       type: object
@@ -582,6 +679,25 @@ components:
           - startTime: "00:00:03.500"
             endTime: "00:00:07.200"
             text: "donde vamos a hablar sobre inteligencia artificial"
+        source:
+          videoId: "8cnF9pESLPc"
+          title: "¡Traición a México! Sheinbaum defiende a Cienfuegos y ataca a EE. UU. por el caso Ovidio"
+          description: "En este video analizamos las declaraciones de la presidenta Claudia Sheinbaum sobre el caso del general Salvador Cienfuegos y las implicaciones políticas..."
+          channel: "Canal de Noticias"
+          channelId: "UCexample123"
+          channelUrl: "https://www.youtube.com/channel/UCexample123"
+          duration: 1234
+          durationFormatted: "20:34"
+          uploadDate: "2025-07-16"
+          viewCount: 125000
+          likeCount: 3500
+          commentCount: 450
+          tags: ["política", "méxico", "noticias", "sheinbaum", "cienfuegos", "eeuu"]
+          categories: ["News & Politics"]
+          thumbnailUrl: "https://i.ytimg.com/vi/8cnF9pESLPc/maxresdefault.jpg"
+          language: "es"
+          availability: "public"
+          ageLimit: 0
 
     CleanTranscriptExample:
       summary: Transcripción limpia para n8n
@@ -594,6 +710,14 @@ components:
         wordCount: 1250
         characterCount: 7845
         totalSegments: 145
+        source:
+          videoId: "8cnF9pESLPc"
+          title: "¡Traición a México! Sheinbaum defiende a Cienfuegos y ataca a EE. UU. por el caso Ovidio"
+          description: "En este video analizamos las declaraciones de la presidenta Claudia Sheinbaum..."
+          channel: "Canal de Noticias"
+          duration: 1234
+          uploadDate: "2025-07-16"
+          tags: ["política", "méxico", "noticias", "sheinbaum"]
 
     InvalidUrlError:
       summary: Error por URL inválida
